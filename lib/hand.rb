@@ -15,7 +15,7 @@ class Hand
     :straight_flush => 1_000_000_000
   }
 
-  attr_accessor :cards
+  attr_accessor :cards, :hand_value
 
   def self.new_hand(deck)
     hand = Hand.new
@@ -27,6 +27,7 @@ class Hand
 
   def initialize
     @cards = []
+    @hand_value = 0
   end
 
   def add_card(card)
@@ -68,14 +69,23 @@ class Hand
 
   def flush?
     first_card_suit = cards.first.suit
-    cards.all?{|card| card.suit == first_card_suit}
+    if cards.all?{|card| card.suit == first_card_suit}
+      @hand_value = high_card
+      return true
+    end
+    false
   end
 
   def straight?
     values = []
     cards.each {|card| values << card.value}
     values.sort!
-    return true if values == [1, 10, 11, 12, 13]
+    #if high ace, hand_value is 14
+    if values == [1, 10, 11, 12, 13]
+      @hand_value = 14
+      return true
+    end
+
     i = 0
     while i < values.size - 1
       if values[i] + 1 != values[i + 1]
@@ -83,10 +93,82 @@ class Hand
       end
       i += 1
     end
+    @hand_value = high_card
     true
   end
 
+  def four_of_a_kind?
+    value_hash = Hash.new(0)
+    cards.each do |card|
+      value_hash[card.value] += 1
+    end
+    value_hash.select! { |k, v| v == 4 }
+    if value_hash.size == 1
+      value_hash.each do |k, v|
+        @hand_value = k * v
+      end
+      return true
+    end
+    false
+  end
 
+  def full_house?
+    three_of_a_kind? && pair?
+  end
 
+  def three_of_a_kind?
+    value_hash = Hash.new(0)
+    cards.each do |card|
+      value_hash[card.value] += 1
+    end
+    value_hash.select! { |k, v| v == 3 }
+    if value_hash.size == 1
+      value_hash.each do |k, v|
+        @hand_value = k * v
+      end
+      return true
+    end
+    false
+  end
+
+  def two_pair?
+    value_hash = Hash.new(0)
+    cards.each do |card|
+      value_hash[card.value] += 1
+    end
+    value_hash.select! { |k, v| v == 2 }
+    if value_hash.size == 2
+      value_hash.each do |k, v|
+        @hand_value = k * v
+      end
+      return true
+    end
+    false
+  end
+
+  def pair?
+    value_hash = Hash.new(0)
+    cards.each do |card|
+      value_hash[card.value] += 1
+    end
+    value_hash.select! { |k, v| v == 2 }
+
+    if value_hash.size == 1
+      value_hash.each do |k, v|
+        @hand_value += k * v
+      end
+      return true
+    end
+
+    false
+
+  end
+
+  def high_card
+    values = []
+    cards.each {|card| values << card.value}
+    values.sort!
+    values.last
+  end
 
 end

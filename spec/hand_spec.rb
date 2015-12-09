@@ -64,15 +64,16 @@ describe Hand do
 
   describe "#flush?" do
 
-    it "returns true if all cards have the same suit" do
+    it "returns true if all cards have the same suit and evaluates high card" do
       card = double(:card)
         allow(card).to receive(:suit).and_return(:c)
+        allow(card).to receive(:value).and_return(10)
       deck = double(:deck)
         allow(deck).to receive(:cards).and_return([card, card, card, card, card])
 
-
       new_hand = Hand.new_hand(deck)
       expect(new_hand.flush?).to eq(true)
+      expect(new_hand.hand_value).to eq(10)
 
     end
 
